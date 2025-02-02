@@ -1,25 +1,23 @@
-# For more information: https://laravel.com/docs/sail
 services:
-    laravel.test:
+    fastapi.test:
         build:
-            context: ./vendor/laravel/sail/runtimes/{{PHP_VERSION}}
+            context: $SAIL_HOME/runtimes/{{PYTHON_VERSION}}
             dockerfile: Dockerfile
             args:
+                WWWUSER: '${WWWUSER}'
                 WWWGROUP: '${WWWGROUP}'
-        image: sail-{{PHP_VERSION}}/app
+        image: sail-python_v{{PYTHON_VERSION}}/app
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
-            - '${APP_PORT:-80}:80'
-            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+            - '${APP_PORT:-8000}:8000'
         environment:
             WWWUSER: '${WWWUSER}'
-            LARAVEL_SAIL: 1
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
-            - '.:/var/www/html'
+            - '.:/opt/app'
         networks:
             - sail
 networks:

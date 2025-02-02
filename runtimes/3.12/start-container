@@ -1,0 +1,29 @@
+#!/usr/bin/env zsh
+
+if [ "$SUPERVISOR_USER" != "root" ] && [ "$SUPERVISOR_USER" != "sail" ]; then
+    echo "You should set SUPERVISOR_USER to either 'sail' or 'root'."
+    exit 1
+fi
+
+if [ ! -z "$WWWUSER" ]; then
+    usermod -u $WWWUSER sail
+fi
+echo "/opt/app/.venv"
+
+if [ ! -d /opt/app/.venv ]; then
+    python3 -m venv /opt/app/.venv
+    source /opt/app/.venv/bin/activate
+    pip install -r /opt/app/requirements.txt
+else
+    source /opt/app/.venv/bin/activate
+fi
+
+if [ $# -gt 0 ]; then
+    # if [ "$SUPERVISOR_USER" = "root" ]; then
+        exec "$@"
+    # else
+        # exec gosu $WWWUSER "$@"
+    # fi
+else
+    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+fi

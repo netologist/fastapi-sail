@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 UNAMEOUT="$(uname -s)"
+SAIL_ROOT_DIR="$(dirname -- "$(readlink -f ${BASH_SOURCE[0]})")/.."
 
 # Verify operating system is supported...
 case "${UNAMEOUT}" in
@@ -10,7 +11,7 @@ case "${UNAMEOUT}" in
 esac
 
 if [ "$MACHINE" == "UNKNOWN" ]; then
-    echo "Unsupported operating system [$(uname -s)]. Laravel Sail supports macOS, Linux, and Windows (WSL2)." >&2
+    echo "Unsupported operating system [$(uname -s)]. Fastmail Sail supports macOS, Linux, and Windows (WSL2)." >&2
 
     exit 1
 fi
@@ -30,35 +31,40 @@ fi
 
 # Function that prints the available commands...
 function display_help {
-    echo "Laravel Sail"
+    echo "FastAPI Sail"
     echo
     echo "${YELLOW}Usage:${NC}" >&2
     echo "  sail COMMAND [options] [arguments]"
     echo
     echo "Unknown commands are passed to the docker-compose binary."
     echo
+    echo "${YELLOW}Service Commands:${NC}"
+    echo "  ${GREEN}sail new ...${NC}     Creates new fastapi project with sail setup."
+    # echo "  ${GREEN}sail init${NC}        Set initialize  docker-compose and devcontainer.json files."
+    # echo "  ${GREEN}  --service ${NC}     Add to services like pgsql, mysql, redis, etc... Default (pgsql)"
+    # echo "  ${GREEN}  --runtime ${NC}     Set Python version... Default Python 3.12"
+    # echo "  ${GREEN}  --python ${NC}      Alias for --runtime option"
+    # echo "  ${GREEN}sail add ...${NC}     Add required services in docker-compose"
+    # echo "  ${GREEN}  --service ${NC}     Add to services like pgsql, mysql, redis, etc... Default (pgsql)"
+    echo "  ${GREEN}sail services${NC}    List all available service containers"
+    # echo "  ${GREEN}sail runtimes${NC}    List all available runtimes"
+    echo
     echo "${YELLOW}docker-compose Commands:${NC}"
-    echo "  ${GREEN}sail up${NC}        Start the application"
-    echo "  ${GREEN}sail up -d${NC}     Start the application in the background"
-    echo "  ${GREEN}sail stop${NC}      Stop the application"
-    echo "  ${GREEN}sail restart${NC}   Restart the application"
-    echo "  ${GREEN}sail ps${NC}        Display the status of all containers"
+    echo "  ${GREEN}sail up${NC}          Start the application"
+    echo "  ${GREEN}sail up -d${NC}       Start the application in the background"
+    echo "  ${GREEN}sail stop${NC}        Stop the application"
+    echo "  ${GREEN}sail restart${NC}     Restart the application"
+    echo "  ${GREEN}sail ps${NC}          Display the status of all containers"
     echo
-    echo "${YELLOW}Artisan Commands:${NC}"
-    echo "  ${GREEN}sail artisan ...${NC}          Run an Artisan command"
-    echo "  ${GREEN}sail artisan queue:work${NC}"
+    echo "${YELLOW}Python Commands:${NC}"
+    echo "  ${GREEN}sail python ...${NC}  Run a snippet of Python code"
+    echo "  ${GREEN}sail python -v${NC}"
     echo
-    echo "${YELLOW}PHP Commands:${NC}"
-    echo "  ${GREEN}sail php ...${NC}   Run a snippet of PHP code"
-    echo "  ${GREEN}sail php -v${NC}"
-    echo
-    echo "${YELLOW}Composer Commands:${NC}"
-    echo "  ${GREEN}sail composer ...${NC}                       Run a Composer command"
-    echo "  ${GREEN}sail composer require laravel/sanctum${NC}"
+    echo "${YELLOW}Pip Commands:${NC}"
+    echo "  ${GREEN}sail pip ...${NC}       Run a Pip command"
     echo
     echo "${YELLOW}Node Commands:${NC}"
-    echo "  ${GREEN}sail node ...${NC}         Run a Node command"
-    echo "  ${GREEN}sail node --version${NC}"
+    echo "  ${GREEN}sail node ...${NC}      Run a Node command"
     echo
     echo "${YELLOW}NPM Commands:${NC}"
     echo "  ${GREEN}sail npm ...${NC}        Run a npm command"
@@ -74,50 +80,34 @@ function display_help {
     echo "  ${GREEN}sail yarn ...${NC}        Run a Yarn command"
     echo "  ${GREEN}sail yarn run prod${NC}"
     echo
-    echo "${YELLOW}Bun Commands:${NC}"
-    echo "  ${GREEN}sail bun ...${NC}        Run a bun command"
-    echo "  ${GREEN}sail bunx${NC}           Run a bunx command"
-    echo "  ${GREEN}sail bun run prod${NC}"
-    echo
     echo "${YELLOW}Database Commands:${NC}"
-    echo "  ${GREEN}sail mysql${NC}     Start a MySQL CLI session within the 'mysql' container"
-    echo "  ${GREEN}sail mariadb${NC}   Start a MySQL CLI session within the 'mariadb' container"
-    echo "  ${GREEN}sail psql${NC}      Start a PostgreSQL CLI session within the 'pgsql' container"
-    echo "  ${GREEN}sail mongodb${NC}   Start a Mongo Shell session within the 'mongodb' container"
-    echo "  ${GREEN}sail redis${NC}     Start a Redis CLI session within the 'redis' container"
-    echo "  ${GREEN}sail valkey${NC}    Start a Valkey CLI session within the 'valkey' container"
-    echo
-    echo "${YELLOW}Debugging:${NC}"
-    echo "  ${GREEN}sail debug ...${NC}          Run an Artisan command in debug mode"
-    echo "  ${GREEN}sail debug queue:work${NC}"
+    echo "  ${GREEN}sail mysql${NC}         Start a MySQL CLI session within the 'mysql' container"
+    echo "  ${GREEN}sail mariadb${NC}       Start a MySQL CLI session within the 'mariadb' container"
+    echo "  ${GREEN}sail psql${NC}          Start a PostgreSQL CLI session within the 'pgsql' container"
+    echo "  ${GREEN}sail mongodb${NC}       Start a Mongo Shell session within the 'mongodb' container"
+    echo "  ${GREEN}sail redis${NC}         Start a Redis CLI session within the 'redis' container"
     echo
     echo "${YELLOW}Running Tests:${NC}"
-    echo "  ${GREEN}sail test${NC}          Run the PHPUnit tests via the Artisan test command"
-    echo "  ${GREEN}sail phpunit ...${NC}   Run PHPUnit"
-    echo "  ${GREEN}sail pest ...${NC}      Run Pest"
-    echo "  ${GREEN}sail pint ...${NC}      Run Pint"
-    echo "  ${GREEN}sail dusk${NC}          Run the Dusk tests (Requires the laravel/dusk package)"
-    echo "  ${GREEN}sail dusk:fails${NC}    Re-run previously failed Dusk tests (Requires the laravel/dusk package)"
+    echo "  ${GREEN}sail pytest${NC}        Run pytest"
+    echo "  ${GREEN}sail tox ...${NC}       Run toxblack"
+    echo "  ${GREEN}sail black ...${NC}     Run black"
+    echo "  ${GREEN}sail flake8 ...${NC}    Run flake8"
+    echo "  ${GREEN}sail isort${NC}         Run isort"
+    echo "  ${GREEN}sail mypy${NC}          Run mypy"
+    echo "  ${GREEN}sail pylint${NC}        Run pylint"
+    echo "  ${GREEN}sail pre-commit${NC}    Run pre-commit"
     echo
     echo "${YELLOW}Container CLI:${NC}"
-    echo "  ${GREEN}sail shell${NC}        Start a shell session within the application container"
-    echo "  ${GREEN}sail bash${NC}         Alias for 'sail shell'"
-    echo "  ${GREEN}sail root-shell${NC}   Start a root shell session within the application container"
-    echo "  ${GREEN}sail root-bash${NC}    Alias for 'sail root-shell'"
-    echo "  ${GREEN}sail tinker${NC}       Start a new Laravel Tinker session"
+    echo "  ${GREEN}sail shell${NC}         Start a shell session within the application container"
+    echo "  ${GREEN}sail zsh${NC}           Alias for 'sail shell'"
+    echo "  ${GREEN}sail root-shell${NC}    Start a root shell session within the application container"
+    echo "  ${GREEN}sail root-zsh${NC}      Alias for 'sail root-shell'"
     echo
     echo "${YELLOW}Sharing:${NC}"
-    echo "  ${GREEN}sail share${NC}   Share the application publicly via a temporary URL"
     echo "  ${GREEN}sail open${NC}    Open the site in your browser"
     echo
     echo "${YELLOW}Binaries:${NC}"
-    echo "  ${GREEN}sail bin ...${NC}   Run Composer binary scripts from the vendor/bin directory"
     echo "  ${GREEN}sail run ...${NC}   Run a command within the application container"
-    echo
-    echo "${YELLOW}Customization:${NC}"
-    echo "  ${GREEN}sail artisan sail:publish${NC}   Publish the Sail configuration files"
-    echo "  ${GREEN}sail build --no-cache${NC}       Rebuild all of the Sail containers"
-
     exit 1
 }
 
@@ -130,7 +120,7 @@ else
     display_help
 fi
 
-# Source the ".env" file so Laravel's environment variables are available...
+# Source the ".env" file so fastapi's environment variables are available...
 # shellcheck source=/dev/null
 if [ -n "$APP_ENV" ] && [ -f ./.env."$APP_ENV" ]; then
   source ./.env."$APP_ENV";
@@ -139,15 +129,15 @@ elif [ -f ./.env ]; then
 fi
 
 # Define environment variables...
-export APP_PORT=${APP_PORT:-80}
-export APP_SERVICE=${APP_SERVICE:-"laravel.test"}
-export DB_PORT=${DB_PORT:-3306}
-export WWWUSER=${WWWUSER:-$UID}
+export APP_PORT=${APP_PORT:-8000}
+export APP_SERVICE=${APP_SERVICE:-"fastapi.test"}
+export DB_PORT=${DB_PORT:-5432}
+export WWWUSER=${WWWUSER:-$(id -u)}
 export WWWGROUP=${WWWGROUP:-$(id -g)}
 
 export SAIL_FILES=${SAIL_FILES:-""}
 export SAIL_SHARE_DASHBOARD=${SAIL_SHARE_DASHBOARD:-4040}
-export SAIL_SHARE_SERVER_HOST=${SAIL_SHARE_SERVER_HOST:-"laravel-sail.site"}
+export SAIL_SHARE_SERVER_HOST=${SAIL_SHARE_SERVER_HOST:-"fastapi-sail.site"}
 export SAIL_SHARE_SERVER_PORT=${SAIL_SHARE_SERVER_PORT:-8080}
 export SAIL_SHARE_SUBDOMAIN=${SAIL_SHARE_SUBDOMAIN:-""}
 export SAIL_SHARE_DOMAIN=${SAIL_SHARE_DOMAIN:-"$SAIL_SHARE_SERVER_HOST"}
@@ -157,9 +147,83 @@ export SAIL_SHARE_SERVER=${SAIL_SHARE_SERVER:-""}
 function sail_is_not_running {
     echo "${BOLD}Sail is not running.${NC}" >&2
     echo "" >&2
-    echo "${BOLD}You may Sail using the following commands:${NC} './vendor/bin/sail up' or './vendor/bin/sail up -d'" >&2
+    echo "${BOLD}You may Sail using the following commands:${NC} '$SAIL_HOME/bin/sail up' or '$SAIL_HOME/bin/sail up -d'" >&2
 
     exit 1
+}
+
+
+function get_available_services {
+    local services;
+    for fullfile in "$SAIL_ROOT_DIR/stubs"/*
+    do
+        basename=$(basename -- "$fullfile")
+        extension="${basename##*.}"
+        filename="${basename%.*}"
+        if [ "$filename" != "devcontainer" ] && [ "$filename" != "docker-compose" ]; then
+            services+=("$filename")
+        fi
+    done
+    declare -p services;
+}
+
+function list_available_services {
+    local services;
+    eval $(get_available_services)
+
+    echo -e "${BOLD}\nAvailable Services:${NC}"
+    for service in ${services[@]}
+    do
+        echo " - $service"
+    done
+    exit 1
+}
+
+function create_project() {
+    desired_runtime=(3.12)
+    desired_services=(pgsql)
+    project_folder="$1"
+    echo "new fastapi project"
+    echo "$1"
+    # shift 1
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        --with)
+            IFS=',' read -r -a desired_services <<< "$2"
+            shift 1
+            ;;
+        esac
+    shift
+    done
+
+    local services;
+    local has_db=false;
+    local db_type;
+    local db_host;
+    local db_port;
+    eval $(get_available_services)
+    eligable_services=()
+    for i in "${services[@]}"; do
+        skip=
+        for j in "${desired_services[@]}"; do
+            [[ $i == $j ]] && { eligable_services+=("$i"); break; }
+        done
+    done
+
+    local stubs="";
+    for service_name in ${eligable_services[@]}
+    do
+        echo " - $service_name"
+        stubs+=" /opt/stubs/${service_name}.stub"
+    done
+
+    mkdir -p $project_folder
+    cp  -R $SAIL_ROOT_DIR/project-template/* $project_folder
+    cp  -R $SAIL_ROOT_DIR/project-template/.env $project_folder
+    docker run -v $SAIL_ROOT_DIR:/opt hasanozgan/yq eval-all '. as $item ireduce ({}; . *+ $item)' /opt/stubs/docker-compose.stub $stubs \
+        | sed "s/{{PYTHON_VERSION}}/$desired_runtime/" \
+        > $project_folder/docker-compose.yml
+    exit 1;
 }
 
 # Define Docker Compose command prefix...
@@ -209,27 +273,13 @@ fi
 ARGS=()
 
 # Proxy PHP commands to the "php" binary on the application container...
-if [ "$1" == "php" ]; then
+if [ "$1" == "python" ]; then
     shift 1
 
     if [ "$EXEC" == "yes" ]; then
         ARGS+=(exec -u sail)
         [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" "php")
-    else
-        sail_is_not_running
-    fi
-
-# Proxy vendor binary commands on the application container...
-elif [ "$1" == "bin" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        CMD=$1
-        shift 1
-        ARGS+=(exec -u sail)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" ./vendor/bin/"$CMD")
+        ARGS+=("$APP_SERVICE" "python")
     else
         sail_is_not_running
     fi
@@ -260,126 +310,48 @@ elif [ "$1" == "docker-compose" ]; then
         sail_is_not_running
     fi
 
-# Proxy Composer commands to the "composer" binary on the application container...
-elif [ "$1" == "composer" ]; then
+# Proxy pip commands to the "pip" binary on the application container...
+elif [ "$1" == "pip" ]; then
     shift 1
 
     if [ "$EXEC" == "yes" ]; then
         ARGS+=(exec -u sail)
         [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" "composer")
+        ARGS+=("$APP_SERVICE" "pip")
     else
         sail_is_not_running
     fi
 
-# Proxy Artisan commands to the "artisan" binary on the application container...
-elif [ "$1" == "artisan" ] || [ "$1" == "art" ] || [ "$1" == "a" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u sail)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" php artisan)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy the "debug" command to the "php artisan" binary on the application container with xdebug enabled...
-elif [ "$1" == "debug" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u sail -e XDEBUG_TRIGGER=1)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" php artisan)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy the "test" command to the "php artisan test" Artisan command...
+# Proxy the "test" command to the "pytest" command...
 elif [ "$1" == "test" ]; then
     shift 1
 
     if [ "$EXEC" == "yes" ]; then
         ARGS+=(exec -u sail)
         [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" php artisan test)
+        ARGS+=("$APP_SERVICE" pytest)
     else
         sail_is_not_running
     fi
 
-# Proxy the "phpunit" command to "php vendor/bin/phpunit"...
-elif [ "$1" == "phpunit" ]; then
+elif [ "$1" == "tox" ]; then
     shift 1
 
     if [ "$EXEC" == "yes" ]; then
         ARGS+=(exec -u sail)
         [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" php vendor/bin/phpunit)
+        ARGS+=("$APP_SERVICE" tox)
     else
         sail_is_not_running
     fi
 
-# Proxy the "pest" command to "php vendor/bin/pest"...
-elif [ "$1" == "pest" ]; then
+elif [ "$1" == "black" ]; then
     shift 1
 
     if [ "$EXEC" == "yes" ]; then
         ARGS+=(exec -u sail)
         [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" php vendor/bin/pest)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy the "pint" command to "php vendor/bin/pint"...
-elif [ "$1" == "pint" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u sail)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" php vendor/bin/pint)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy the "dusk" command to the "php artisan dusk" Artisan command...
-elif [ "$1" == "dusk" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u sail)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=(-e "APP_URL=http://${APP_SERVICE}")
-        ARGS+=(-e "DUSK_DRIVER_URL=http://selenium:4444/wd/hub")
-        ARGS+=("$APP_SERVICE" php artisan dusk)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy the "dusk:fails" command to the "php artisan dusk:fails" Artisan command...
-elif [ "$1" == "dusk:fails" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u sail)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=(-e "APP_URL=http://${APP_SERVICE}")
-        ARGS+=(-e "DUSK_DRIVER_URL=http://selenium:4444/wd/hub")
-        ARGS+=("$APP_SERVICE" php artisan dusk:fails)
-    else
-        sail_is_not_running
-    fi
-
-# Initiate a Laravel Tinker session within the application container...
-elif [ "$1" == "tinker" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u sail)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" php artisan tinker)
+        ARGS+=("$APP_SERVICE" black)
     else
         sail_is_not_running
     fi
@@ -456,30 +428,6 @@ elif [ "$1" == "yarn" ]; then
         sail_is_not_running
     fi
 
-# Proxy Bun commands to the "bun" binary on the application container...
-elif [ "$1" == "bun" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u sail)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" bun)
-    else
-        sail_is_not_running
-    fi
-
-# Proxy Bun X commands to the "bunx" binary on the application container...
-elif [ "$1" == "bunx" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec -u sail)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" bunx)
-    else
-        sail_is_not_running
-    fi
-
 # Initiate a MySQL CLI terminal session within the "mysql" container...
 elif [ "$1" == "mysql" ]; then
     shift 1
@@ -520,25 +468,25 @@ elif [ "$1" == "psql" ]; then
     fi
 
 # Initiate a Bash shell within the application container...
-elif [ "$1" == "shell" ] || [ "$1" == "bash" ]; then
+elif [ "$1" == "shell" ] || [ "$1" == "zsh" ]; then
     shift 1
 
     if [ "$EXEC" == "yes" ]; then
         ARGS+=(exec -u sail)
         [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" bash)
+        ARGS+=("$APP_SERVICE" zsh)
     else
         sail_is_not_running
     fi
 
 # Initiate a root user Bash shell within the application container...
-elif [ "$1" == "root-shell" ] || [ "$1" == "root-bash" ]; then
+elif [ "$1" == "root-shell" ] || [ "$1" == "root-zsh" ]; then
     shift 1
 
     if [ "$EXEC" == "yes" ]; then
         ARGS+=(exec -u root)
         [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=("$APP_SERVICE" bash)
+        ARGS+=("$APP_SERVICE" zsh)
     else
         sail_is_not_running
     fi
@@ -567,37 +515,6 @@ elif [ "$1" == "redis" ]; then
         sail_is_not_running
     fi
 
-# Initiate a Valkey CLI terminal session within the "valkey" container...
-elif [ "$1" == "valkey" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        ARGS+=(exec)
-        [ ! -t 0 ] && ARGS+=(-T)
-        ARGS+=(valkey valkey-cli)
-    else
-        sail_is_not_running
-    fi
-
-# Share the site...
-elif [ "$1" == "share" ]; then
-    shift 1
-
-    if [ "$EXEC" == "yes" ]; then
-        docker run --init --rm --add-host=host.docker.internal:host-gateway -p "$SAIL_SHARE_DASHBOARD":4040 -t beyondcodegmbh/expose-server:latest share http://host.docker.internal:"$APP_PORT" \
-            --server-host="$SAIL_SHARE_SERVER_HOST" \
-            --server-port="$SAIL_SHARE_SERVER_PORT" \
-            --auth="$SAIL_SHARE_TOKEN" \
-            --server="$SAIL_SHARE_SERVER" \
-            --subdomain="$SAIL_SHARE_SUBDOMAIN" \
-            --domain="$SAIL_SHARE_DOMAIN" \
-            "$@"
-
-        exit
-    else
-        sail_is_not_running
-    fi
-
 # Open the site...
 elif [ "$1" == "open" ]; then
     shift 1
@@ -613,7 +530,7 @@ elif [ "$1" == "open" ]; then
 
     if [ "$EXEC" == "yes" ]; then
 
-        if [[ -n "$APP_PORT" && "$APP_PORT" != "80" ]]; then
+        if [[ -n "$APP_PORT" && "$APP_PORT" != "8000" ]]; then
             FULL_URL="${APP_URL}:${APP_PORT}"
         else
             FULL_URL="$APP_URL"
@@ -625,7 +542,23 @@ elif [ "$1" == "open" ]; then
     else
         sail_is_not_running
     fi
-fi
+
+    elif [ "$1" == "new" ]; then
+        shift 1
+        create_project "$@"
+
+    # # Proxy add binary on the application container...
+    # elif [ "$1" == "add" ]; then
+    #     shift 1
+    #     add_service_in_docker_compose_file "$@"
+
+    # Proxy list binary on the application container...
+    elif [ "$1" == "services" ]; then
+        list_available_services
+
+    # elif [ "$1" == "runtimes" ]; then
+    #     list_available_runtimes
+    fi
 
 # Run Docker Compose with the defined arguments...
 "${DOCKER_COMPOSE[@]}" "${ARGS[@]}" "$@"

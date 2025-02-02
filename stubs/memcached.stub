@@ -1,6 +1,7 @@
-memcached:
-    image: 'memcached:alpine'
-    ports:
-        - '${FORWARD_MEMCACHED_PORT:-11211}:11211'
-    networks:
-        - sail
+services:
+    memcached:
+        image: 'memcached:alpine'
+        ports:
+            - '${FORWARD_MEMCACHED_PORT:-11211}:11211'
+        networks:
+            - sail
