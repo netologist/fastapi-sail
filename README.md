@@ -5,7 +5,7 @@ applications.
 
 #### Inspiration
 
-Fastmail Sail is inspired by and derived from
+Fastmail Sail is forked by and derived from
 [Laravel Sail](https://github.com/laravel/sail) by
 [Laravel Team](https://github.com/laravel).
 
